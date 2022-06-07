@@ -1,10 +1,6 @@
 import numpy as np
-from djitellopy import Tello
 import cv2
-import math
-import time
 
-showCap = True
 classes = []
 whT = 320
 confThr = 0.5
@@ -16,7 +12,6 @@ with open('coco.names', 'r') as f:
 net = cv2.dnn.readNet('yolov3-tiny.cfg', 'yolov3-tiny.weights')
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-
 
 def findObjects(outputs, img):
     wT, hT, _ = img.shape
@@ -47,55 +42,20 @@ def findObjects(outputs, img):
                         cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255), 3)
 
 
-tello = Tello()
-tello.connect()
-
-# print(tello.get_battery())
-# exit(0)
-
-tello.streamon()
-frame_read = tello.get_frame_read()
-
-tello.takeoff()
-
-while True:
-
-    if showCap:
+def yolo_cam(tello):
+    while True:
+    
         img = tello.get_frame_read().frame
         img = cv2.resize(img, (720, 480))
-    else:
-        img = cv2.imread('1.jpg')
 
-    blob = cv2.dnn.blobFromImage(
-        img, 1/255, (whT, whT), [0, 0, 0], 1, crop=False)
-    net.setInput(blob)
-    layers = net.getLayerNames()
-    outputN = [(layers[i-1]) for i in net.getUnconnectedOutLayers()]
-    outputs = net.forward(outputN)
-    findObjects(outputs, img)
+        blob = cv2.dnn.blobFromImage(
+            img, 1/255, (whT, whT), [0, 0, 0], 1, crop=False)
+        net.setInput(blob)
+        layers = net.getLayerNames()
+        outputN = [(layers[i-1]) for i in net.getUnconnectedOutLayers()]
+        outputs = net.forward(outputN)
+        findObjects(outputs, img)
+        
+        cv2.imshow("drone", img)
 
-    drone_cam = frame_read.frame
-    # cv2.imshow("drone", drone_cam)
-    cv2.imshow("drone", img)
-
-    key = cv2.waitKey(1) & 0xff
-    if key == 27:  # ESCrr
-        break
-    elif key == ord('w'):
-        tello.move_forward(30)
-    elif key == ord('s'):
-        tello.move_back(30)
-    elif key == ord('a'):
-        tello.move_left(30)
-    elif key == ord('d'):
-        tello.move_right(30)
-    elif key == ord('e'):
-        tello.rotate_clockwise(30)
-    elif key == ord('q'):
-        tello.rotate_counter_clockwise(30)
-    elif key == ord('r'):
-        tello.move_up(30)
-    elif key == ord('f'):
-        tello.move_down(30)
-
-tello.land()
+   

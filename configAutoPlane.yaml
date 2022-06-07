@@ -1,0 +1,9 @@
+move_back: 50
+rotate_clockwise: 90
+move_forward: 50
+rotate_counter_clockwise: 100
+move_forward: 50
+rotate_counter_clockwise: 100
+move_forward: 50
+move_left: 50
+land: true
