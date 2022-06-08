@@ -1,28 +1,15 @@
+from concurrent.futures import thread
 import numpy as np
 import cv2
 import yaml
 import time
-import _thread
+import threading
 
 from djitellopy import Tello
 from configPlane import plane
 
-with open("configAutoPlane.yaml", "r") as f:
-    configAutoPlane = yaml.load(f, Loader=yaml.FullLoader)
+def findObjects(classes, outputs, img):
 
-with open('coco.names', 'r') as f:
-    classes = f.read().rstrip('\n').split("\n")
-
-net = cv2.dnn.readNet('yolov3-tiny.cfg', 'yolov3-tiny.weights')
-net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-
-tello = Tello()
-tello.connect()
-
-def findObjects(outputs, img):
-
-    classes = []
     confThr = 0.5
     nmsThr = 0.4
 
@@ -53,7 +40,7 @@ def findObjects(outputs, img):
             cv2.putText(img, label, (x, y+30),
                         cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255), 3)
 
-def renderCam( a, b ):
+def renderCam(tello, classes, net):
       
    tello.streamon()
    whT = 320
@@ -68,27 +55,48 @@ def renderCam( a, b ):
       layers = net.getLayerNames()
       outputN = [(layers[i-1]) for i in net.getUnconnectedOutLayers()]
       outputs = net.forward(outputN)
-      findObjects(outputs, img)
+      findObjects(classes, outputs, img)
       
       cv2.imshow("drone", img)
       
       key = cv2.waitKey(1) & 0xff
-      if key == 27:  # ESCrr
+      if key == 27:  # ESC
          time.sleep(1)
          tello.streamoff()
          break
 
-def configPlane( a, b ):
-   time.sleep(3)
+def configPlane(tello, configAutoPlane):
+   time.sleep(4)
    tello.takeoff()
-   for key in configAutoPlane:
-      plane(tello, key, configAutoPlane[key])   
+   for i in configAutoPlane:  
+      for j in configAutoPlane[i]:    
+         plane(tello, j, configAutoPlane[i][j]) 
 
-try:
-   _thread.start_new_thread( renderCam, ("", "") )
-   _thread.start_new_thread( configPlane, ("", "") )
-except:
-   print ("Error: unable to start thread")
+def index():
+   
+   with open("configAutoPlane.yaml", "r") as f:
+      configAutoPlane = yaml.load(f, Loader=yaml.FullLoader)
+   
+   with open('coco.names', 'r') as f:
+      classes = f.read().rstrip('\n').split("\n")
+   
+   tello = Tello()
+   tello.connect()
+   
+   net = cv2.dnn.readNet('yolov3-tiny.cfg', 'yolov3-tiny.weights')
+   net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+   net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
-while 1:
-   pass
+   t1 = threading.Thread(target=renderCam, args=(tello, classes, net,))
+   t2 = threading.Thread(target=configPlane, args=(tello, configAutoPlane,))
+
+   t1.start()
+   t2.start()
+
+   t1.join()
+   t2.join()
+   
+   print(tello.get_battery())
+   exit()
+   
+index()  
