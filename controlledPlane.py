@@ -16,7 +16,6 @@ net = cv2.dnn.readNet('yolov3-tiny.cfg', 'yolov3-tiny.weights')
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
-
 def findObjects(outputs, img):
     wT, hT, _ = img.shape
     bbox = []
@@ -45,7 +44,6 @@ def findObjects(outputs, img):
             cv2.putText(img, label, (x, y+30),
                         cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255), 3)
 
-
 tello = Tello()
 tello.connect()
 
@@ -53,17 +51,12 @@ print(tello.get_battery())
 # exit(0)
 
 tello.streamon()
-frame_read = tello.get_frame_read()
-
-# tello.takeoff()
+tello.takeoff()
 
 while True:
 
-    if showCap:
-        img = tello.get_frame_read().frame
-        img = cv2.resize(img, (720, 480))
-    else:
-        img = cv2.imread('1.jpg')
+    img = tello.get_frame_read().frame
+    img = cv2.resize(img, (1080, 720))
 
     blob = cv2.dnn.blobFromImage(
         img, 1/255, (whT, whT), [0, 0, 0], 1, crop=False)
@@ -73,7 +66,6 @@ while True:
     outputs = net.forward(outputN)
     findObjects(outputs, img)
 
-    drone_cam = frame_read.frame
     cv2.imshow("drone", img)
 
     key = cv2.waitKey(1) & 0xff
@@ -81,31 +73,31 @@ while True:
         time.sleep(3)
         tello.streamoff()
         break
-    # elif key == ord('w'):
-    #     time.sleep(3)
-    #     tello.move_forward(30)
-    # elif key == ord('s'):
-    #     time.sleep(3)
-    #     tello.move_back(30)
-    # elif key == ord('a'):
-    #     time.sleep(3)
-    #     tello.move_left(30)
-    # elif key == ord('d'):
-    #     time.sleep(3)
-    #     tello.move_right(30)
-    # elif key == ord('e'):
-    #     time.sleep(3)
-    #     tello.rotate_clockwise(30)
-    # elif key == ord('q'):
-    #     time.sleep(3)
-    #     tello.rotate_counter_clockwise(30)
-    # elif key == ord('r'):
-    #     time.sleep(3)
-    #     tello.move_up(30)
-    # elif key == ord('f'):
-    #     time.sleep(3)
-    #     tello.move_down(30)
+    elif key == ord('w'):
+        time.sleep(3)
+        tello.move_forward(30)
+    elif key == ord('s'):
+        time.sleep(3)
+        tello.move_back(30)
+    elif key == ord('a'):
+        time.sleep(3)
+        tello.move_left(30)
+    elif key == ord('d'):
+        time.sleep(3)
+        tello.move_right(30)
+    elif key == ord('e'):
+        time.sleep(3)
+        tello.rotate_clockwise(30)
+    elif key == ord('q'):
+        time.sleep(3)
+        tello.rotate_counter_clockwise(30)
+    elif key == ord('r'):
+        time.sleep(3)
+        tello.move_up(30)
+    elif key == ord('f'):
+        time.sleep(3)
+        tello.move_down(30)
 
 time.sleep(3)
-tello.streamoff()
+tello.streamon()
 tello.land()

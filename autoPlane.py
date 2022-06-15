@@ -42,10 +42,12 @@ def findObjects(classes, outputs, img):
 
 def renderCam(tello, classes, net):
       
-   tello.streamon()
+   fourcc = cv2.VideoWriter_fourcc(*'XVID')
+   out = cv2.VideoWriter('output.avi', fourcc, 20.0, (720,  480))
    whT = 320
    
    while True :
+      
       img = tello.get_frame_read().frame
       img = cv2.resize(img, (720, 480))
 
@@ -59,12 +61,21 @@ def renderCam(tello, classes, net):
       
       cv2.imshow("drone", img)
       
+      frame = cv2.flip(img, 0)
+      out.write(frame)
+      
       key = cv2.waitKey(1) & 0xff
       if key == 27:  # ESC
          time.sleep(1)
          tello.streamoff()
          break
-
+      
+   out.release()
+   cv2.destroyAllWindows()
+   
+   
+   
+   
 def configPlane(tello, configAutoPlane):
    time.sleep(4)
    tello.takeoff()
@@ -82,6 +93,9 @@ def index():
    
    tello = Tello()
    tello.connect()
+   tello.streamon()
+   
+   keepRecording = True
    
    net = cv2.dnn.readNet('yolov3-tiny.cfg', 'yolov3-tiny.weights')
    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
@@ -89,14 +103,14 @@ def index():
 
    t1 = threading.Thread(target=renderCam, args=(tello, classes, net,))
    t2 = threading.Thread(target=configPlane, args=(tello, configAutoPlane,))
-
+  
+   print(tello.get_battery())
    t1.start()
    t2.start()
-
+  
    t1.join()
    t2.join()
    
-   print(tello.get_battery())
-   exit()
+   keepRecording = False
    
 index()  

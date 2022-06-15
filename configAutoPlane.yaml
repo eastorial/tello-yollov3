@@ -1,18 +1,8 @@
 step1:
-  move_forward: 100
+  rotate_clockwise : 360
 step2:
-  rotate_clockwise : 90
+  rotate_counter_clockwise : 360
 step3:
-  move_forward: 100
-step4:
-  rotate_clockwise : 90
-step5:
-  move_forward: 100
-step6:
-  rotate_clockwise : 90
-step7:
-  move_forward: 100
-step8:
   land : 1
-step9:
+step4:
   streamoff : 1
